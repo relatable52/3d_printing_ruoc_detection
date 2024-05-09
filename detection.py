@@ -55,7 +55,6 @@ def predictVideo(model, vid_path, thresh, show=True, save=False):
 
 def predictStream(model, cam_no, thresh, show=True):
     vid = cv.VideoCapture(cam_no)
-    save_dir = "result.mp4"
     while True:
         ret, frame = vid.read()
         if frame is None:
@@ -72,15 +71,15 @@ def predictStream(model, cam_no, thresh, show=True):
 def main():
     args = get_args()
     model = YOLO('3d_print_70_epoch_best.pt')
-    mode = args["--mode"]
-    vid_path = args["--vid_path"]
-    cam_no = args["--cam_no"]
-    show = args["--show"]
-    save = args["save"]
+    mode = args.mode
+    vid_path = args.vid_path
+    cam_no = args.cam_no
+    show = args.show
+    save = args.save
     if(mode == "stream"):
-        predictStream(model, cam_no, 0.7, show)
+        predictStream(model, cam_no, 0.2, show)
     elif(mode == "video"):
-        predictVideo(model, vid_path, 0.7, show, save)
+        predictVideo(model, vid_path, 0.2, show, save)
     else:
         raise NotImplemented
 
