@@ -3,7 +3,7 @@ from ultralytics import YOLO
 import os
 
 def predictImage(img, model, thresh):
-    scale = 640/img.shape[1]
+    scale = 160/img.shape[1]
     img = cv.resize(img, None, fx=scale, fy=scale)
 
     results = model(img)
