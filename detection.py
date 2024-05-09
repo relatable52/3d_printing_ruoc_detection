@@ -1,9 +1,19 @@
 import cv2 as cv
 from ultralytics import YOLO
+import argparse
 import os
 
+def get_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--mode", type=str, default="stream")
+    parser.add_argument("--vid_path", type=str)
+    parser.add_argument("--cam_no", type=int, default=0)
+    parser.add_argument("--show", type=bool, default=True)
+    parser.add_argument("--save", type=bool, default=False)
+    return parser.parse_args()
+
 def predictImage(img, model, thresh):
-    scale = 160/img.shape[1]
+    scale = 640/img.shape[1]
     img = cv.resize(img, None, fx=scale, fy=scale)
 
     results = model(img)
@@ -22,7 +32,7 @@ def predictImage(img, model, thresh):
     drawBox(results, img, thresh)
     return img
 
-def predictVideo(model, vid_path, thresh, show=True, save=True):
+def predictVideo(model, vid_path, thresh, show=True, save=False):
     vid = cv.VideoCapture(vid_path)
     fourcc = cv.VideoWriter_fourcc(*'mp4v')
     save_dir = "result.mp4"
@@ -43,6 +53,37 @@ def predictVideo(model, vid_path, thresh, show=True, save=True):
     out.release()
     cv.destroyAllWindows()
 
+def predictStream(model, cam_no, thresh, show=True):
+    vid = cv.VideoCapture(cam_no)
+    save_dir = "result.mp4"
+    while True:
+        ret, frame = vid.read()
+        if frame is None:
+            break
+        frame = predictImage(frame, model, thresh)
+        if show:
+            cv.imshow('A', frame)
+        if cv.waitKey(20) & 0xff == ord('d'):
+            break
+
+    vid.release()
+    cv.destroyAllWindows()
+
+def main():
+    args = get_args()
+    model = YOLO('3d_print_70_epoch_best.pt')
+    mode = args["--mode"]
+    vid_path = args["--vid_path"]
+    cam_no = args["--cam_no"]
+    show = args["--show"]
+    save = args["save"]
+    if(mode == "stream"):
+        predictStream(model, cam_no, 0.7, show)
+    elif(mode == "video"):
+        predictVideo(model, vid_path, 0.7, show, save)
+    else:
+        raise NotImplemented
+
 # model = YOLO('3dprint.pt')
 # img = cv.imread('benchy_fail.png')
 # img = predictImage(img, model, 0.55)
@@ -52,6 +93,4 @@ def predictVideo(model, vid_path, thresh, show=True, save=True):
 # cv.destroyAllWindows()
 
 if __name__ == "__main__":
-    model = YOLO('3d_print_70_epoch_best.pt')
-    predictVideo(model, '0509.mp4', 0.55)
-    print()
+    main()
